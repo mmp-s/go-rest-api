@@ -51,6 +51,7 @@ func createEvent(w http.ResponseWriter, r *http.Request) {
 
 func getOneEvent(w http.ResponseWriter, r *http.Request) {
 	// Get the ID from the url
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	eventID := mux.Vars(r)["id"]
 
 	// Get the details from an existing event
@@ -63,6 +64,7 @@ func getOneEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllEvents(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(events)
 }
 
@@ -102,7 +104,7 @@ func deleteEvent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
+func getRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink)
 	router.HandleFunc("/event", createEvent).Methods("POST")
@@ -110,5 +112,21 @@ func main() {
 	router.HandleFunc("/events/{id}", getOneEvent).Methods("GET")
 	router.HandleFunc("/events/{id}", updateEvent).Methods("PATCH")
 	router.HandleFunc("/events/{id}", deleteEvent).Methods("DELETE")
+
+	return router
+}
+
+func startServer(){
+  log.Println("start test server......")
+  router := getRouter()
+  go func() {
+        if err := http.ListenAndServe(":8080", router); err != http.ErrServerClosed {
+            log.Fatalf("ListenAndServe(): %s", err)
+        }
+    }()
+}
+
+func main() {
+	router := getRouter()
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
